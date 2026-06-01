@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sport Capture</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📸 Sport Capture</h1>
+
+<p class="subtitle">
+Система автоматической фотосъёмки спортсмена
+</p>
+
+<video id="video" autoplay playsinline></video>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<div class="buttons">
+
+<button id="startBtn">
+▶ Запустить
+</button>
+
+<button id="stopBtn">
+⏹ Остановить
+</button>
+
+<button id="clearBtn">
+🗑 Очистить галерею
+</button>
+
+</div>
+
+<p id="status">
+Статус: ожидание
+</p>
+
+<p id="motion">
+Движение: нет
+</p>
+
+<p id="counter">
+Фотографий: 0
+</p>
+
+<p id="runtime">
+Время работы: 0 сек
+</p>
+
+<p id="lastMotion">
+Последнее движение: нет
+</p>
+
+<h3>Чувствительность</h3>
+
+<input
+type="range"
+id="sensitivity"
+min="100000"
+max="2000000"
+step="50000"
+value="500000">
+
+<p id="sensValue">
+500000
+</p>
+
+<h2>Последний снимок</h2>
+
+<img id="snapshot">
+
+<h2>Галерея</h2>
+
+<div id="gallery"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
