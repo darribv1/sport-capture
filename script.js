@@ -2,6 +2,7 @@ const video = document.getElementById("video");
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const clearBtn = document.getElementById("clearBtn");
+const switchBtn = document.getElementById("switchBtn");
 
 let previousFrame = null;
 let photoCount = 0;
@@ -10,15 +11,31 @@ let stream = null;
 let detectorInterval = null;
 let startTime = null;
 
+let currentCamera = "environment";
+
+async function startCamera() {
+
+    if(stream){
+
+        stream.getTracks().forEach(track=>{
+            track.stop();
+        });
+    }
+
+    stream = await navigator.mediaDevices.getUserMedia({
+        video:{
+            facingMode: currentCamera
+        }
+    });
+
+    video.srcObject = stream;
+}
+
 startBtn.addEventListener("click", async () => {
 
     try {
 
-        stream = await navigator.mediaDevices.getUserMedia({
-            video:true
-        });
-
-        video.srcObject = stream;
+        await startCamera();
 
         startTime = Date.now();
 
@@ -37,6 +54,18 @@ startBtn.addEventListener("click", async () => {
         document.getElementById("status").innerText =
             "Ошибка: " + error.message;
     }
+
+});
+
+switchBtn.addEventListener("click", async ()=>{
+
+    if(currentCamera === "environment"){
+        currentCamera = "user";
+    }else{
+        currentCamera = "environment";
+    }
+
+    await startCamera();
 
 });
 
@@ -86,14 +115,23 @@ function startMotionDetection(){
 
         if(video.videoWidth === 0) return;
 
-        canvas.width = 160;
-        canvas.height = 120;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        ctx.drawImage(video,0,0,160,120);
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
         const currentFrame =
             ctx.getImageData(
-                0,0,160,120
+                0,
+                0,
+                canvas.width,
+                canvas.height
             ).data;
 
         if(previousFrame){
@@ -133,10 +171,10 @@ function startMotionDetection(){
                 document.getElementById(
                     "lastMotion"
                 ).innerText =
-                "Последнее движение: "
-                +
-                new Date()
-                .toLocaleTimeString();
+                    "Последнее движение: "
+                    +
+                    new Date()
+                    .toLocaleTimeString();
 
                 makeSnapshot();
 
@@ -172,8 +210,44 @@ function makeSnapshot(){
     const canvas =
         document.getElementById("canvas");
 
-    const image =
-        canvas.toDataURL("image/jpeg");
+    let image;
+
+    if(currentCamera === "user"){
+
+        const tempCanvas =
+            document.createElement("canvas");
+
+        const tempCtx =
+            tempCanvas.getContext("2d");
+
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+
+        tempCtx.translate(
+            tempCanvas.width,
+            0
+        );
+
+        tempCtx.scale(-1,1);
+
+        tempCtx.drawImage(
+            canvas,
+            0,
+            0
+        );
+
+        image =
+            tempCanvas.toDataURL(
+                "image/jpeg"
+            );
+
+    }else{
+
+        image =
+            canvas.toDataURL(
+                "image/jpeg"
+            );
+    }
 
     document.getElementById(
         "snapshot"
@@ -211,30 +285,23 @@ function addToGallery(image){
     img.className =
         "gallery-image";
 
-    const download =
-        document.createElement("a");
+    img.style.cursor = "pointer";
 
-    download.href = image;
+    img.addEventListener("click",()=>{
 
-    download.download =
-        "photo_" +
-        Date.now() +
-        ".jpg";
+        const newWindow =
+            window.open();
 
-    download.innerText =
-        "Скачать";
+        newWindow.document.write(
+            `<img src="${image}" style="width:100%">`
+        );
+
+    });
 
     card.appendChild(img);
-    card.appendChild(download);
 
     gallery.prepend(card);
 
-    if(gallery.children.length > 10){
-
-        gallery.removeChild(
-            gallery.lastChild
-        );
-    }
 }
 
 document
@@ -244,7 +311,7 @@ document
     document
     .getElementById("sensValue")
     .innerText =
-    e.target.value;
+        e.target.value;
 
 });
 
@@ -264,9 +331,9 @@ setInterval(()=>{
         document.getElementById(
             "runtime"
         ).innerText =
-        "Время работы: "
-        + seconds
-        + " сек";
+            "Время работы: "
+            + seconds
+            + " сек";
     }
 
 },1000);
